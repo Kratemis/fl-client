@@ -15,6 +15,7 @@ parser = argparse.ArgumentParser()
 
 parser.add_argument('--download-folder', required=True)
 parser.add_argument('--local-folder', required=True)
+parser.add_argument('--s3-folder', required=True)
 parser.add_argument('--config-file', required=True)
 parser.add_argument('--job-id', required=True)
 parser.add_argument('--bucket', required=True)
@@ -129,4 +130,4 @@ logging.info('Finished Training')
 
 logging.info('Saving model...')
 torch.save(net, MODEL_PATH, _use_new_zipfile_serialization=False)
-uploaded = upload_to_aws(MODEL_PATH, args.bucket, MODEL)
+uploaded = upload_to_aws(MODEL_PATH, args.bucket, args.s3_folder + '/' + MODEL)
