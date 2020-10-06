@@ -10,6 +10,7 @@ Client for federated learning demo
 * Bucket (S3 Bucket name)
 * S3 Access Key
 * S3 Secret Key
+* S3 Folder
 * Main Model Path (Path for the main model)
 * Debug (Debug mode)
 
