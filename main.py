@@ -65,7 +65,7 @@ class Net(nn.Module):
 
 
 def upload_to_aws(local_file, bucket, s3_file):
-    logging.info("Uploading to S3 bucket ")
+    logging.info("Uploading to S3 bucket")
 
     s3 = boto3.client('s3', aws_access_key_id=args.s3_access_key,
                       aws_secret_access_key=args.s3_secret_key)
