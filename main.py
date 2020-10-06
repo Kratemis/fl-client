@@ -20,7 +20,7 @@ parser.add_argument('--job-id', required=True)
 parser.add_argument('--bucket', required=True)
 parser.add_argument('--s3-access-key', required=True)
 parser.add_argument('--s3-secret-key', required=True)
-parser.add_argument('--main-model', required=True)
+parser.add_argument('--main-model-path', required=True)
 parser.add_argument('-d', '--debug', help="Debug mode for the script")
 args = parser.parse_args()
 
@@ -32,8 +32,7 @@ else:
 MODEL = int(time.time()) + '_model.pt'
 MODEL_PATH = args.local_folder + '/' + MODEL
 
-MAIN_MODEL = args.main_model
-MAIN_MODEL_PATH = args.local_folder + '/' + MAIN_MODEL
+MAIN_MODEL_PATH = args.main_model_path
 
 
 def load_config():
