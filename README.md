@@ -1,15 +1,6 @@
-# fl-client
+# FL-Client
 
-parser.add_argument('--download-folder', required=True)
-parser.add_argument('--local-folder', required=True)
-parser.add_argument('--config-file', required=True)
-parser.add_argument('--job-id', required=True)
-parser.add_argument('--bucket', required=True)
-parser.add_argument('--s3-access-key', required=True)
-parser.add_argument('--s3-secret-key', required=True)
-parser.add_argument('--main-model', required=True)
-parser.add_argument('-d', '--debug', help="Debug mode for the script")
-
+Client for federated learning demo
 
 ## Arguments
 * Download Folder (Path where CIFAR dataset is downloaded)
