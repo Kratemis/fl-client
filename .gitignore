@@ -130,3 +130,7 @@ dmypy.json
 
 #IntelliJ
 .idea
+
+#App
+./storage
+./dataset
