@@ -13,34 +13,31 @@ import logging
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--download-folder', required=True)
-parser.add_argument('--local-folder', required=True)
-parser.add_argument('--s3-folder', required=True)
-parser.add_argument('--config-file', required=True)
-parser.add_argument('--job-id', required=True)
-parser.add_argument('--bucket', required=True)
-parser.add_argument('--s3-access-key', required=True)
-parser.add_argument('--s3-secret-key', required=True)
-parser.add_argument('--main-model-path', required=True)
+parser.add_argument('--s3-client-models-folder', help='S3 folder for client models', required=True)
+parser.add_argument('--s3-main-models-folder', help='S3 folder for main models', required=True)
+parser.add_argument('--local-dataset-folder', help='Local folder for dataset', required=True)
+parser.add_argument('--local-client-models-folder', help='Local folder for client models', required=True)
+parser.add_argument('--local-main-model-folder', help='Local folder for client models', required=True)
+parser.add_argument('--config-file', help='Configuration file with ML parameters', required=True)
+parser.add_argument('--job-id', help='Unique Job ID', required=True)
+parser.add_argument('--clients-bucket', help='Bucket name for client models', required=True)
+parser.add_argument('--main-bucket', help='Bucket name for main models', required=True)
+parser.add_argument('--s3-access-key', help='Credentials for AWS', required=False)
+parser.add_argument('--s3-secret-key', help='Credentials for AWS', required=False)
 parser.add_argument('-d', '--debug', help="Debug mode for the script")
+
 args = parser.parse_args()
+
 if args.debug:
     logging.basicConfig(level=logging.DEBUG)
 else:
     logging.basicConfig(level=logging.INFO)
 
-MODEL = int(time.time()) + '_model.pt'
-MODEL_PATH = args.local_folder + '/' + MODEL
-
-MAIN_MODEL_PATH = args.main_model_path + '/main_model.pt'
-
 
 def load_config():
     logging.info('Loading config')
-    with open(args.config_file) as config_file:
-        data = json.load(config_file)
-        logging.info('Config loaded')
-    return data
+    return json.loads(str(args.config_file))
+
 
 
 class Net(nn.Module):
@@ -81,15 +78,18 @@ def upload_to_aws(local_file, bucket, s3_file):
         return False
 
 
-def download_from_aws(remote_path, bucket, local_path):
+def download_from_aws(bucket, remote_path, local_path):
     logging.info("Downloading from S3 bucket")
 
     s3 = boto3.client('s3', aws_access_key_id=args.s3_access_key,
                       aws_secret_access_key=args.s3_secret_key)
 
     try:
+        logging.info("Bucket: " + bucket)
+        logging.info("Remote Path: " + remote_path)
+        logging.info("Local Path: " + local_path)
         s3.download_file(bucket, remote_path, local_path)
-        logging.info("Upload Successful")
+        logging.info("Download Successful")
         return True
     except FileNotFoundError:
         logging.error("The file was not found")
@@ -105,7 +105,7 @@ transform = transforms.Compose(
     [transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-trainset = torchvision.datasets.CIFAR10(root=args.download_folder, train=True,
+trainset = torchvision.datasets.CIFAR10(root=args.local_dataset_folder, train=True,
                                         download=True, transform=transform)
 
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=int(config['batch_size']),
@@ -114,9 +114,11 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=int(config['batch
 classes = ('plane', 'car', 'bird', 'cat',
            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
-download_from_aws(args.s3_folder, args.bucket, MAIN_MODEL_PATH)
+S3_MAIN_MODEL_PATH = args.s3_main_models_folder + '/main_model.pt'
+LOCAL_MAIN_MODEL_PATH = args.local_main_model_folder + '/main_model.pt'
+download_from_aws(args.main_bucket, S3_MAIN_MODEL_PATH, LOCAL_MAIN_MODEL_PATH)
 
-net = torch.load(MAIN_MODEL_PATH)
+net = torch.load(LOCAL_MAIN_MODEL_PATH)
 
 criterion = nn.CrossEntropyLoss()
 
@@ -148,5 +150,9 @@ for epoch in range(int(config['epochs'])):  # loop over the dataset multiple tim
 logging.info('Finished Training')
 
 logging.info('Saving model...')
+
+MODEL = str(int(time.time())) + '_model.pt'
+MODEL_PATH = args.local_client_models_folder + '/' + MODEL
+
 torch.save(net, MODEL_PATH, _use_new_zipfile_serialization=False)
-uploaded = upload_to_aws(MODEL_PATH, args.bucket, args.s3_folder + '/' + MODEL)
+uploaded = upload_to_aws(MODEL_PATH, args.clients_bucket, args.s3_client_models_folder + '/' + MODEL)
