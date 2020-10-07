@@ -24,7 +24,6 @@ parser.add_argument('--s3-secret-key', required=True)
 parser.add_argument('--main-model-path', required=True)
 parser.add_argument('-d', '--debug', help="Debug mode for the script")
 args = parser.parse_args()
-
 if args.debug:
     logging.basicConfig(level=logging.DEBUG)
 else:
@@ -33,7 +32,7 @@ else:
 MODEL = int(time.time()) + '_model.pt'
 MODEL_PATH = args.local_folder + '/' + MODEL
 
-MAIN_MODEL_PATH = args.main_model_path
+MAIN_MODEL_PATH = args.main_model_path + '/main_model.pt'
 
 
 def load_config():
@@ -82,6 +81,24 @@ def upload_to_aws(local_file, bucket, s3_file):
         return False
 
 
+def download_from_aws(remote_path, bucket, local_path):
+    logging.info("Downloading from S3 bucket")
+
+    s3 = boto3.client('s3', aws_access_key_id=args.s3_access_key,
+                      aws_secret_access_key=args.s3_secret_key)
+
+    try:
+        s3.download_file(bucket, remote_path, local_path)
+        logging.info("Upload Successful")
+        return True
+    except FileNotFoundError:
+        logging.error("The file was not found")
+        return False
+    except NoCredentialsError:
+        logging.error("Credentials not available")
+        return False
+
+
 config = load_config()
 
 transform = transforms.Compose(
@@ -96,6 +113,8 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=int(config['batch
 
 classes = ('plane', 'car', 'bird', 'cat',
            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+
+download_from_aws(args.s3_folder, args.bucket, MAIN_MODEL_PATH)
 
 net = torch.load(MAIN_MODEL_PATH)
 
