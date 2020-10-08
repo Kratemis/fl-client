@@ -101,6 +101,11 @@ def download_from_aws(bucket, remote_path, local_path):
 
 config = load_config()
 
+device = torch.device("cuda:0" if config['use_cuda'] else "cpu")
+
+logging.info("CUDA: ")
+logging.info(device)
+
 transform = transforms.Compose(
     [transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
@@ -119,7 +124,7 @@ LOCAL_MAIN_MODEL_PATH = args.local_main_model_folder + '/main_model.pt'
 download_from_aws(args.main_bucket, S3_MAIN_MODEL_PATH, LOCAL_MAIN_MODEL_PATH)
 
 net = torch.load(LOCAL_MAIN_MODEL_PATH)
-
+net.to(device)
 criterion = nn.CrossEntropyLoss()
 
 optimizer = optim.SGD(net.parameters(), lr=float(config['lr']), momentum=float(config['momentum']))
@@ -129,7 +134,7 @@ for epoch in range(int(config['epochs'])):  # loop over the dataset multiple tim
     running_loss = 0.0
     for i, data in enumerate(trainloader, 0):
         # get the inputs; data is a list of [inputs, labels]
-        inputs, labels = data
+        inputs, labels = data.to(device)
 
         # zero the parameter gradients
         optimizer.zero_grad()
