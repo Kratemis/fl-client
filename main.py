@@ -134,7 +134,10 @@ for epoch in range(int(config['epochs'])):  # loop over the dataset multiple tim
     running_loss = 0.0
     for i, data in enumerate(trainloader, 0):
         # get the inputs; data is a list of [inputs, labels]
-        inputs, labels = data.to(device)
+        if config['use_cuda']:
+            inputs, labels = data.to(device)
+        else:
+            inputs, labels = data
 
         # zero the parameter gradients
         optimizer.zero_grad()
