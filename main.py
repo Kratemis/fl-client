@@ -135,7 +135,7 @@ for epoch in range(int(config['epochs'])):  # loop over the dataset multiple tim
     for i, data in enumerate(trainloader, 0):
         # get the inputs; data is a list of [inputs, labels]
         if config['use_cuda']:
-            inputs, labels = data[0].to(device)
+            inputs, labels = data[0].to(device), data[1].to(device)
         else:
             inputs, labels = data
 
