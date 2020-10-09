@@ -18,6 +18,7 @@ parser.add_argument('--s3-main-models-folder', help='S3 folder for main models',
 parser.add_argument('--local-dataset-folder', help='Local folder for dataset', required=True)
 parser.add_argument('--local-client-models-folder', help='Local folder for client models', required=True)
 parser.add_argument('--local-main-model-folder', help='Local folder for client models', required=True)
+parser.add_argument('--initial-main-model', help='Initial main model', required=True)
 parser.add_argument('--config-file', help='Configuration file with ML parameters', required=True)
 parser.add_argument('--job-id', help='Unique Job ID', required=True)
 parser.add_argument('--clients-bucket', help='Bucket name for client models', required=True)
@@ -37,7 +38,6 @@ else:
 def load_config():
     logging.info('Loading config')
     return json.loads(str(args.config_file))
-
 
 
 class Net(nn.Module):
@@ -119,8 +119,8 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=int(config['batch
 classes = ('plane', 'car', 'bird', 'cat',
            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
-S3_MAIN_MODEL_PATH = args.s3_main_models_folder + '/main_model.pt'
-LOCAL_MAIN_MODEL_PATH = args.local_main_model_folder + '/main_model.pt'
+S3_MAIN_MODEL_PATH = args.s3_main_models_folder + '/' + args.initial_main_model
+LOCAL_MAIN_MODEL_PATH = args.local_main_model_folder + '/' + args.initial_main_model
 download_from_aws(args.main_bucket, S3_MAIN_MODEL_PATH, LOCAL_MAIN_MODEL_PATH)
 
 net = torch.load(LOCAL_MAIN_MODEL_PATH)
