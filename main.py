@@ -8,37 +8,12 @@ import json
 import boto3
 from botocore.exceptions import NoCredentialsError
 import time
-import argparse
 import logging
-
-parser = argparse.ArgumentParser()
-
-parser.add_argument('--s3-client-models-folder', help='S3 folder for client models', required=True)
-parser.add_argument('--s3-main-models-folder', help='S3 folder for main models', required=True)
-parser.add_argument('--local-dataset-folder', help='Local folder for dataset', required=True)
-parser.add_argument('--local-client-models-folder', help='Local folder for client models', required=True)
-parser.add_argument('--local-main-model-folder', help='Local folder for client models', required=True)
-parser.add_argument('--initial-main-model', help='Initial main model', required=True)
-parser.add_argument('--config-file', help='Configuration file with ML parameters', required=True)
-parser.add_argument('--job-id', help='Unique Job ID', required=True)
-parser.add_argument('--clients-bucket', help='Bucket name for client models', required=True)
-parser.add_argument('--main-bucket', help='Bucket name for main models', required=True)
-parser.add_argument('--s3-access-key', help='Credentials for AWS', required=False)
-parser.add_argument('--s3-secret-key', help='Credentials for AWS', required=False)
-parser.add_argument('--s3-session-token', help='Credentials for AWS', required=False)
-parser.add_argument('-d', '--debug', help="Debug mode for the script")
-
-args = parser.parse_args()
-
-if args.debug:
-    logging.basicConfig(level=logging.DEBUG)
-else:
-    logging.basicConfig(level=logging.INFO)
+import os
 
 
 def load_config():
-    logging.info('Loading config')
-    return json.loads(str(args.config_file))
+    return json.loads(str(os.environ['CONFIG']))
 
 
 class Net(nn.Module):
@@ -64,9 +39,9 @@ class Net(nn.Module):
 def upload_to_aws(local_file, bucket, s3_file):
     logging.info("Uploading to S3 bucket")
 
-    s3 = boto3.client('s3', aws_access_key_id=args.s3_access_key,
-                      aws_secret_access_key=args.s3_secret_key,
-                      aws_session_token=args.s3_session_token)
+    s3 = boto3.client('s3', aws_access_key_id=config['secrets']['s3_access_key'],
+                      aws_secret_access_key=config['secrets']['s3_secret_key'],
+                      aws_session_token=config['secrets']['s3_session_token'])
 
     try:
         s3.upload_file(local_file, bucket, s3_file)
@@ -83,9 +58,9 @@ def upload_to_aws(local_file, bucket, s3_file):
 def download_from_aws(bucket, remote_path, local_path):
     logging.info("Downloading from S3 bucket")
 
-    s3 = boto3.client('s3', aws_access_key_id=args.s3_access_key,
-                      aws_secret_access_key=args.s3_secret_key,
-                      aws_session_token=args.s3_session_token
+    s3 = boto3.client('s3', aws_access_key_id=config['secrets']['s3_access_key'],
+                      aws_secret_access_key=config['secrets']['s3_secret_key'],
+                      aws_session_token=config['secrets']['s3_session_token']
                       )
 
     try:
@@ -105,35 +80,40 @@ def download_from_aws(bucket, remote_path, local_path):
 
 config = load_config()
 
-device = torch.device("cuda:0" if config['use_cuda'] else "cpu")
+if config['metadata']['debug']:
+    logging.basicConfig(level=logging.DEBUG)
+else:
+    logging.basicConfig(level=logging.INFO)
 
-logging.info("CUDA: ")
+device = torch.device("cuda:0" if config['config']['use_cuda'] else "cpu")
+
+logging.info("DEVICE: ")
 logging.info(device)
 
 transform = transforms.Compose(
     [transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-trainset = torchvision.datasets.CIFAR10(root=args.local_dataset_folder, train=True,
-                                        download=True, transform=transform)
+trainset = torchvision.datasets.CIFAR10(root=config['dataset']['local_path'], train=True,
+                                        download=config['dataset']['download'], transform=transform)
 
-trainloader = torch.utils.data.DataLoader(trainset, batch_size=int(config['batch_size']),
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=int(config['config']['batch_size']),
                                           shuffle=True, num_workers=2)
 
 classes = ('plane', 'car', 'bird', 'cat',
            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
-S3_MAIN_MODEL_PATH = args.s3_main_models_folder + '/' + args.initial_main_model
-LOCAL_MAIN_MODEL_PATH = args.local_main_model_folder + '/' + args.initial_main_model
-download_from_aws(args.main_bucket, S3_MAIN_MODEL_PATH, LOCAL_MAIN_MODEL_PATH)
+S3_MAIN_MODEL_PATH = config['input_model']['s3_key'] + '/' + config['input_model']['model_name']
+LOCAL_MAIN_MODEL_PATH = config['input_model']['local_path'] + '/' + config['input_model']['model_name']
+download_from_aws(config['input_model']['s3_bucket'], S3_MAIN_MODEL_PATH, LOCAL_MAIN_MODEL_PATH)
 
 net = torch.load(LOCAL_MAIN_MODEL_PATH)
 net.to(device)
 criterion = nn.CrossEntropyLoss()
 
-optimizer = optim.SGD(net.parameters(), lr=float(config['lr']), momentum=float(config['momentum']))
+optimizer = optim.SGD(net.parameters(), lr=float(config['config']['lr']), momentum=float(config['config']['momentum']))
 
-for epoch in range(int(config['epochs'])):  # loop over the dataset multiple times
+for epoch in range(int(config['config']['epochs'])):  # loop over the dataset multiple times
 
     running_loss = 0.0
     for i, data in enumerate(trainloader, 0):
@@ -161,7 +141,7 @@ logging.info('Finished Training')
 logging.info('Saving model...')
 
 MODEL = str(int(time.time())) + '_model.pt'
-MODEL_PATH = args.local_client_models_folder + '/' + MODEL
+MODEL_PATH = config['output']['local_path'] + '/' + MODEL
 
 torch.save(net, MODEL_PATH, _use_new_zipfile_serialization=False)
-uploaded = upload_to_aws(MODEL_PATH, args.clients_bucket, args.s3_client_models_folder + '/' + MODEL)
+uploaded = upload_to_aws(MODEL_PATH, config['output']['s3_bucket'], config['output']['s3_key'] + '/' + MODEL)
