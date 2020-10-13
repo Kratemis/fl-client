@@ -2,20 +2,13 @@
 
 Client for federated learning demo
 
-## Arguments
-* --s3-client-models-folder (S3 folder for client model)
-* --s3-main-models-folder (S3 folder for main model)
-* --local-folder (Local folder)
-* --initial-main-model (Initial main model)
-* --config-file (Configuration file with ML parameter)
-* --job-id (Unique Job Id)
-* --clients-bucket (Bucket name for client model)
-* --main-bucket (Bucket name for main model)
-* --s3-access-key (Credentials for AWS)
-* --s3-secret-key (Credentials for AWS)
-* --debug (Debug mode)
 
-## Example
-```bash
-python main.py --config-file '{"use_cuda": 0, "batch_size": 3, "test_batch_size": 1, "lr": 0.001, "log_interval": 10, "epochs": 10, "momentum": 0.09}' --s3-client-models-folder "clients" --s3-main-models-folder "main" --initial-main-model "main_model.pt" --local-folder "/data" --job-id 4245245 --clients-bucket "MY_BUCKET_NAME" --main-bucket "ANOTHER_BUCKET_NAME"
+## How to run it
+
+```
+docker build -t kratemis/fl-server .
+```
+
+```
+docker run kratemis/fl-server -e CONFIG="{ "operation": "run-fl-task", "dataset": {"download": true,"s3_bucket": "flf-models-us-east-1-artifacts", "s3_key": "source/data", "local_path": "/data/dataset" }, "input_model": {"s3_bucket": "flf-models-us-east-1-artifacts", "s3_key": "main", "local_path": "/data/models", "model_name": "main_model.pt" }, "code": {"type": "git_repo", "url": "https://github.com/SaMnCo/fl-client" }, "config": {"use_cuda": 0,"batch_size": 4,"test_batch_size": 1,"lr": 0.001,"log_interval": 10,"epochs": 5,"momentum": 0.09 }, "secrets": {"s3_access_key": "3yh4e64qqhw5nw5netyn", "s3_secret_key": "46b5n22456n46n46n24n46n2456n46", "s3_session_token": "4n246nw5nne5yn"  }, "output": {"weight_only": true,"s3_bucket": "flf-models-us-east-1-artifacts", "s3_key": "clients", "local_path": "/data/output" }, "metadata": {"debug": true }}"
 ```
