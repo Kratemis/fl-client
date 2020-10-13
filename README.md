@@ -5,9 +5,7 @@ Client for federated learning demo
 ## Arguments
 * --s3-client-models-folder (S3 folder for client model)
 * --s3-main-models-folder (S3 folder for main model)
-* --local-dataset-folder (Local folder for dataset)
-* --local-client-models-folder (Local folder for client model)
-* --local-main-model-folder (Local folder for client model)
+* --local-folder (Local folder)
 * --initial-main-model (Initial main model)
 * --config-file (Configuration file with ML parameter)
 * --job-id (Unique Job Id)
