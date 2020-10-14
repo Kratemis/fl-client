@@ -10,7 +10,6 @@ from botocore.exceptions import NoCredentialsError
 import time
 import logging
 import os
-import requests
 
 
 def load_config():
@@ -74,7 +73,23 @@ def download_from_aws(bucket, remote_path, local_path):
         return False
 
 
+def add_trailing_slash_if_missing(path):
+    if path[-1] == '/':
+        return path
+    else:
+        return path + '/'
+
+
+def check_paths():
+    for local_model_path in [config['dataset']['local_path'], config['input_model']['local_path'],
+                             config['output']['local_path']]:
+        if not os.path.exists(local_model_path):
+            logging.info("Creating directory")
+            os.makedirs(local_model_path)
+
+
 config = load_config()
+check_paths()
 
 if config['metadata']['debug']:
     logging.basicConfig(level=logging.DEBUG)
@@ -99,8 +114,9 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=int(config['confi
 classes = ('plane', 'car', 'bird', 'cat',
            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
-S3_MAIN_MODEL_PATH = config['input_model']['s3_key'] + '/' + config['input_model']['model_name']
-LOCAL_MAIN_MODEL_PATH = config['input_model']['local_path'] + '/' + config['input_model']['model_name']
+S3_MAIN_MODEL_PATH = config['input_model']['s3_key']
+LOCAL_MAIN_MODEL_PATH = add_trailing_slash_if_missing(config['input_model']['local_path']) + config['input_model'][
+    'model_name']
 download_from_aws(config['input_model']['s3_bucket'], S3_MAIN_MODEL_PATH, LOCAL_MAIN_MODEL_PATH)
 
 net = torch.load(LOCAL_MAIN_MODEL_PATH)
@@ -137,7 +153,8 @@ logging.info('Finished Training')
 logging.info('Saving model...')
 
 MODEL = str(int(time.time())) + '_model.pt'
-MODEL_PATH = config['output']['local_path'] + '/' + MODEL
+MODEL_PATH = add_trailing_slash_if_missing(config['output']['local_path']) + MODEL
 
 torch.save(net, MODEL_PATH, _use_new_zipfile_serialization=False)
-uploaded = upload_to_aws(MODEL_PATH, config['output']['s3_bucket'], config['output']['s3_key'] + '/' + MODEL)
+uploaded = upload_to_aws(MODEL_PATH, config['output']['s3_bucket'],
+                         add_trailing_slash_if_missing(config['output']['s3_key_prefix']) + MODEL)
