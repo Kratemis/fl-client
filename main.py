@@ -10,7 +10,6 @@ from botocore.exceptions import NoCredentialsError
 import time
 import logging
 import os
-import requests
 
 
 def load_config():
@@ -86,6 +85,12 @@ device = torch.device("cuda:0" if config['config']['use_cuda'] else "cpu")
 logging.info("DEVICE: ")
 logging.info(device)
 
+for local_model_path in [config['dataset']['local_path'], config['input_model']['local_path'],
+                         config['output']['local_path']]:
+    if not os.path.exists(local_model_path):
+        logging.info("Creating directory")
+        os.makedirs(local_model_path)
+
 transform = transforms.Compose(
     [transforms.ToTensor(),
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
@@ -99,7 +104,7 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=int(config['confi
 classes = ('plane', 'car', 'bird', 'cat',
            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
-S3_MAIN_MODEL_PATH = config['input_model']['s3_key'] + '/' + config['input_model']['model_name']
+S3_MAIN_MODEL_PATH = config['input_model']['s3_key']
 LOCAL_MAIN_MODEL_PATH = config['input_model']['local_path'] + '/' + config['input_model']['model_name']
 download_from_aws(config['input_model']['s3_bucket'], S3_MAIN_MODEL_PATH, LOCAL_MAIN_MODEL_PATH)
 
@@ -140,4 +145,4 @@ MODEL = str(int(time.time())) + '_model.pt'
 MODEL_PATH = config['output']['local_path'] + '/' + MODEL
 
 torch.save(net, MODEL_PATH, _use_new_zipfile_serialization=False)
-uploaded = upload_to_aws(MODEL_PATH, config['output']['s3_bucket'], config['output']['s3_key'] + '/' + MODEL)
+uploaded = upload_to_aws(MODEL_PATH, config['output']['s3_bucket'], config['output']['s3_key'])
