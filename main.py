@@ -91,7 +91,6 @@ def check_paths():
 config = load_config()
 check_paths()
 
-
 if config['metadata']['debug']:
     logging.basicConfig(level=logging.DEBUG)
 else:
@@ -116,7 +115,8 @@ classes = ('plane', 'car', 'bird', 'cat',
            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
 S3_MAIN_MODEL_PATH = config['input_model']['s3_key']
-LOCAL_MAIN_MODEL_PATH = add_trailing_slash_if_missing(config['input_model']['local_path']) + config['input_model']['model_name']
+LOCAL_MAIN_MODEL_PATH = add_trailing_slash_if_missing(config['input_model']['local_path']) + config['input_model'][
+    'model_name']
 download_from_aws(config['input_model']['s3_bucket'], S3_MAIN_MODEL_PATH, LOCAL_MAIN_MODEL_PATH)
 
 net = torch.load(LOCAL_MAIN_MODEL_PATH)
@@ -156,4 +156,5 @@ MODEL = str(int(time.time())) + '_model.pt'
 MODEL_PATH = add_trailing_slash_if_missing(config['output']['local_path']) + MODEL
 
 torch.save(net, MODEL_PATH, _use_new_zipfile_serialization=False)
-uploaded = upload_to_aws(MODEL_PATH, config['output']['s3_bucket'], config['output']['s3_key'])
+uploaded = upload_to_aws(MODEL_PATH, config['output']['s3_bucket'],
+                         add_trailing_slash_if_missing(config['output']['s3_key_prefix']) + MODEL)
