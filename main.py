@@ -11,9 +11,9 @@ import time
 import logging
 import os
 
+logger = logging.getLogger()
 
 def load_config():
-    logging.info("START load_config")
     return json.loads(str(os.environ['CONFIG']))
 
 
@@ -109,7 +109,6 @@ def check_paths():
             os.makedirs(local_model_path)
 
 
-logging.info("Loading config")
 config = load_config()
 logging.info("Checking paths")
 check_paths()
