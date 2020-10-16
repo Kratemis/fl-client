@@ -134,3 +134,4 @@ dmypy.json
 #App
 storage/*
 dataset/*
+data/*

@@ -56,7 +56,7 @@ def upload_to_aws(local_file, bucket, s3_file):
 
 def download_from_aws(bucket, remote_path, local_path):
     logging.info("Downloading from S3 bucket")
-
+    print("DOWNLOADING FROM S3 BUCKET")
     s3 = boto3.client('s3')
 
     try:
