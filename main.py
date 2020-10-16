@@ -108,6 +108,7 @@ def check_paths():
             logging.info("Creating directory")
             os.makedirs(local_model_path)
 
+
 logging.info("Loading config")
 config = load_config()
 logging.info("Checking paths")
@@ -137,10 +138,15 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=int(config['confi
 classes = ('plane', 'car', 'bird', 'cat',
            'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
-S3_MAIN_MODEL_PATH = add_end_slash_if_missing(config['input_model']['s3_key'])
+logging.info(f"S3_KEY: {config['input_model']['s3_key']}")
+
 LOCAL_MAIN_MODEL_PATH = convert_to_path(config['input_model']['local_path']) + config['input_model'][
     'model_name']
-download_from_aws(config['input_model']['s3_bucket'], S3_MAIN_MODEL_PATH, LOCAL_MAIN_MODEL_PATH)
+logging.info(f"LOCAL_MAIN_MODEL_PATH: {LOCAL_MAIN_MODEL_PATH}")
+
+download_from_aws(config['input_model']['s3_bucket'], config['input_model']['s3_key'], LOCAL_MAIN_MODEL_PATH)
+
+logging.info(f"LOCAL_MAIN_MODEL_PATH: {LOCAL_MAIN_MODEL_PATH}")
 
 net = torch.load(LOCAL_MAIN_MODEL_PATH)
 net.to(device)
