@@ -13,6 +13,7 @@ import os
 
 
 def load_config():
+    logging.info("START load_config")
     return json.loads(str(os.environ['CONFIG']))
 
 
@@ -74,6 +75,7 @@ def download_from_aws(bucket, remote_path, local_path):
 
 
 def add_end_slash_if_missing(path):
+    logging.info("START add_end_slash_if_missing")
     path = path.strip()
     if path.endswith('/'):
         return path
@@ -82,6 +84,8 @@ def add_end_slash_if_missing(path):
 
 
 def add_start_slash_if_missing(path):
+    logging.info("START add_start_slash_if_missing")
+
     path = path.strip()
     if path.startswith('/'):
         return path
@@ -90,20 +94,23 @@ def add_start_slash_if_missing(path):
 
 
 def convert_to_path(path):
+    logging.info("START convert_to_path")
     path = add_start_slash_if_missing(path)
     path = add_end_slash_if_missing(path)
     return path
 
 
 def check_paths():
+    logging.info("START check_paths")
     for local_model_path in [config['dataset']['local_path'], config['input_model']['local_path'],
                              config['output']['local_path']]:
         if not os.path.exists(local_model_path):
             logging.info("Creating directory")
             os.makedirs(local_model_path)
 
-
+logging.info("Loading config")
 config = load_config()
+logging.info("Checking paths")
 check_paths()
 
 if config['metadata']['debug']:
@@ -111,6 +118,7 @@ if config['metadata']['debug']:
 else:
     logging.basicConfig(level=logging.INFO)
 
+logging.info("Setting device")
 device = torch.device("cuda:0" if config['config']['use_cuda'] else "cpu")
 
 logging.info("DEVICE: ")
