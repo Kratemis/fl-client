@@ -129,7 +129,7 @@ transform = transforms.Compose(
      transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
 trainset = torchvision.datasets.CIFAR10(root=config['dataset']['local_path'], train=True,
-                                        download=config['dataset']['download'], transform=transform)
+                                        download=bool(config['dataset']['download']), transform=transform)
 
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=int(config['config']['batch_size']),
                                           shuffle=True, num_workers=2)
