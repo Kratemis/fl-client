@@ -11,10 +11,17 @@ import time
 import logging
 import os
 
-logger = logging.getLogger()
+logger = ""
 
 def load_config():
-    return json.loads(str(os.environ['CONFIG']))
+    config = json.loads(str(os.environ['CONFIG']))
+    logger = logging.getLogger()
+
+    if config['metadata']['debug']:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
+    return config
 
 
 class Net(nn.Module):
@@ -110,13 +117,11 @@ def check_paths():
 
 
 config = load_config()
+
+
+
 logging.info("Checking paths")
 check_paths()
-
-if config['metadata']['debug']:
-    logging.basicConfig(level=logging.DEBUG)
-else:
-    logging.basicConfig(level=logging.INFO)
 
 logging.info("Setting device")
 device = torch.device("cuda:0" if config['config']['use_cuda'] else "cpu")
