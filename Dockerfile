@@ -4,4 +4,4 @@ ADD ./ /fl-client
 WORKDIR /fl-client
 RUN pip install -r requirements.txt
 
-ENTRYPOINT ["python", "main.py"]
+ENTRYPOINT ["python", "-u", "main.py"]
