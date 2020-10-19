@@ -13,6 +13,7 @@ import os
 
 logger = ""
 
+
 def load_config():
     config = json.loads(str(os.environ['CONFIG']))
     logger = logging.getLogger()
@@ -118,8 +119,6 @@ def check_paths():
 
 config = load_config()
 
-
-
 logging.info("Checking paths")
 check_paths()
 
@@ -177,7 +176,9 @@ for epoch in range(int(config['config']['epochs'])):  # loop over the dataset mu
         # print statistics
         running_loss += loss.item()
         if i % 2000 == 1999:  # print every 2000 mini-batches
-            logging.info('[%d, %5d] loss: %.3f' %
+            #logging.info('[%d, %5d] loss: %.3f' %
+            #             (epoch + 1, i + 1, running_loss / 2000))
+            logging.info('progress: {"epoch": %d, "epoch_progress": %5d, "loss": %.3f}' %
                          (epoch + 1, i + 1, running_loss / 2000))
             running_loss = 0.0
 
