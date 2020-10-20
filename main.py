@@ -7,7 +7,7 @@ import torch.nn.functional as F
 import json
 from json.decoder import JSONDecodeError
 import boto3
-from botocore.exceptions import NoCredentialsError
+from botocore.exceptions import NoCredentialsError, ClientError
 import time
 import logging
 import os
@@ -78,6 +78,10 @@ def download_from_aws(bucket, remote_path, local_path):
         s3.download_file(bucket, remote_path, local_path)
         logging.info("Download Successful")
         return True
+    except ClientError as error:
+        print(ClientError)
+        logging.error('error: {"message": %s}' % json.dumps(error.response['Error']))
+        return False
     except FileNotFoundError:
         logging.error('error: {"message": "The file was not found"}')
         return False
