@@ -5,6 +5,7 @@ import torch.optim as optim
 import torch.nn as nn
 import torch.nn.functional as F
 import json
+from json.decoder import JSONDecodeError
 import boto3
 from botocore.exceptions import NoCredentialsError
 import time
@@ -15,7 +16,11 @@ logger = ""
 
 
 def load_config():
-    config = json.loads(str(os.environ['CONFIG']))
+    try:
+        config = json.loads(str(os.environ['CONFIG']))
+    except JSONDecodeError as e:
+        logging.error('error: {"message": %d}' % e)
+
     logger = logging.getLogger()
 
     if config['metadata']['debug']:
@@ -52,19 +57,18 @@ def upload_to_aws(local_file, bucket, s3_file):
 
     try:
         s3.upload_file(local_file, bucket, s3_file)
-        logging.info("Upload Successful")
+        logging.info('progress: {"message": "Upload Successful"}')
         return True
     except FileNotFoundError:
-        logging.error("The file was not found")
+        logging.error('error: {"message": "The file was not found"}')
         return False
     except NoCredentialsError:
-        logging.error("Credentials not available")
+        logging.error('error: {"message": "Credentials not available"}')
         return False
 
 
 def download_from_aws(bucket, remote_path, local_path):
-    logging.info("Downloading from S3 bucket")
-    print("DOWNLOADING FROM S3 BUCKET")
+    logging.info('progress: {"message": "Downloading from S3 bucket"}')
     s3 = boto3.client('s3')
 
     try:
@@ -75,10 +79,10 @@ def download_from_aws(bucket, remote_path, local_path):
         logging.info("Download Successful")
         return True
     except FileNotFoundError:
-        logging.error("The file was not found")
+        logging.error('error: {"message": "The file was not found"}')
         return False
     except NoCredentialsError:
-        logging.error("Credentials not available")
+        logging.info('error: {"message": "Credentials not available"}')
         return False
 
 
@@ -176,15 +180,15 @@ for epoch in range(int(config['config']['epochs'])):  # loop over the dataset mu
         # print statistics
         running_loss += loss.item()
         if i % 2000 == 1999:  # print every 2000 mini-batches
-            #logging.info('[%d, %5d] loss: %.3f' %
+            # logging.info('[%d, %5d] loss: %.3f' %
             #             (epoch + 1, i + 1, running_loss / 2000))
-            logging.info('progress: {"epoch": %d, "epoch_progress": %5d, "loss": %.3f}' %
+            logging.info('progress: {"message": "Training...", "epoch": %d, "epoch_progress": %5d, "loss": %.3f}' %
                          (epoch + 1, i + 1, running_loss / 2000))
             running_loss = 0.0
 
-logging.info('Finished Training')
+logging.info('progress: {"message": "Training finished"}')
 
-logging.info('Saving model...')
+logging.info('progress: {"message": "Saving model"}')
 
 MODEL = str(int(time.time())) + '_model.pt'
 MODEL_PATH = convert_to_path(config['output']['local_path']) + MODEL
@@ -192,3 +196,4 @@ MODEL_PATH = convert_to_path(config['output']['local_path']) + MODEL
 torch.save(net, MODEL_PATH, _use_new_zipfile_serialization=False)
 uploaded = upload_to_aws(MODEL_PATH, config['output']['s3_bucket'],
                          add_end_slash_if_missing(config['output']['s3_key_prefix']) + MODEL)
+logging.info('finished: {"message": "Model saved"}')
