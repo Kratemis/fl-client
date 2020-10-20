@@ -80,7 +80,7 @@ def download_from_aws(bucket, remote_path, local_path):
         return True
     except ClientError as error:
         print(ClientError)
-        logging.error('error: {"message": %s}' % json.dumps(error.response['Error']))
+        logging.error('error: {"message": %s}' % error.response['Error'])
         return False
     except FileNotFoundError:
         logging.error('error: {"message": "The file was not found"}')
