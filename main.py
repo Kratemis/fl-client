@@ -59,6 +59,9 @@ def upload_to_aws(local_file, bucket, s3_file):
         s3.upload_file(local_file, bucket, s3_file)
         logging.info('progress: {"message": "Upload Successful"}')
         return True
+    except ClientError as error:
+        logging.error('error: {"message": "Upload to bucket error: %s", "code": "%s"}' % (
+        str(error.response['Error']['Message']), str(error.response['Error']['Code'])))
     except FileNotFoundError:
         logging.error('error: {"message": "The file was not found"}')
         return False
@@ -79,10 +82,8 @@ def download_from_aws(bucket, remote_path, local_path):
         logging.info("Download Successful")
         return True
     except ClientError as error:
-        print(error.response)
-        print(error.response['Error']['Message'])
-        print(error.response['Error']['Code'])
-        logging.error('error: {"message": "%s", "code": "%s"}' % (str(error.response['Error']['Message']), str(error.response['Error']['Code'])))
+        logging.error('error: {"message": "Download from bucket error: %s", "code": "%s"}' % (
+            str(error.response['Error']['Message']), str(error.response['Error']['Code'])))
         return False
     except FileNotFoundError:
         logging.error('error: {"message": "The file was not found"}')
