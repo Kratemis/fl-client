@@ -202,5 +202,5 @@ MODEL_PATH = convert_to_path(config['output']['local_path']) + MODEL
 
 torch.save(net, MODEL_PATH, _use_new_zipfile_serialization=False)
 uploaded = upload_to_aws(MODEL_PATH, config['output']['s3_bucket'],
-                         add_end_slash_if_missing(config['output']['s3_key_prefix']) + MODEL)
+                         add_end_slash_if_missing(config['job_id']) + MODEL)
 logging.info('finished: {"message": "Model saved"}')
