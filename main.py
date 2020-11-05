@@ -154,7 +154,7 @@ classes = ('plane', 'car', 'bird', 'cat',
 
 logging.info(f"S3_KEY: {config['input_model']['s3_key']}")
 
-LOCAL_MAIN_MODEL_PATH = convert_to_path(config['input_model']['local_path']) + os.path.basename(config['input_model']['s3_key'])]
+LOCAL_MAIN_MODEL_PATH = convert_to_path(config['input_model']['local_path']) + os.path.basename(config['input_model']['s3_key'])
 logging.info(f"LOCAL_MAIN_MODEL_PATH: {LOCAL_MAIN_MODEL_PATH}")
 
 download_from_aws(config['input_model']['s3_bucket'], config['input_model']['s3_key'], LOCAL_MAIN_MODEL_PATH)
