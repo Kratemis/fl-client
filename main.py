@@ -60,8 +60,8 @@ def upload_to_aws(local_file, bucket, s3_file):
         logging.info('progress: {"message": "Upload Successful"}')
         return True
     except ClientError as error:
-        logging.error('error: {"message": "Upload to bucket error: %s", "code": "%s"}' % (
-            str(error.response['Error']['Message']), str(error.response['Error']['Code'])))
+        logging.error('error: {"message": "Error uploading to bucket error: %s", "code": "%s"}' % (
+        str(error.response['Error']['Message']), str(error.response['Error']['Code'])))
     except FileNotFoundError:
         logging.error('error: {"message": "The file was not found"}')
         return False
@@ -154,8 +154,7 @@ classes = ('plane', 'car', 'bird', 'cat',
 
 logging.info(f"S3_KEY: {config['input_model']['s3_key']}")
 
-LOCAL_MAIN_MODEL_PATH = convert_to_path(config['input_model']['local_path']) + config['input_model'][
-    'model_name']
+LOCAL_MAIN_MODEL_PATH = convert_to_path(config['input_model']['local_path']) + os.path.basename(config['input_model']['s3_key'])]
 logging.info(f"LOCAL_MAIN_MODEL_PATH: {LOCAL_MAIN_MODEL_PATH}")
 
 download_from_aws(config['input_model']['s3_bucket'], config['input_model']['s3_key'], LOCAL_MAIN_MODEL_PATH)
