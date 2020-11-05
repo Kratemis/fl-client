@@ -199,7 +199,15 @@ logging.info('progress: {"message": "Saving model"}')
 MODEL = str(int(time.time())) + '_model.pt'
 MODEL_PATH = convert_to_path(config['output']['local_path']) + MODEL
 
+# <job-doc-prefix>/<FL Project>/<stage>/<jobId>/<thingName>/<final-object>
+S3_KEY = add_end_slash_if_missing(config['output']['s3_key_prefix']) + \
+         add_end_slash_if_missing(config['fl_project']) + \
+         add_end_slash_if_missing(config['stage']) + \
+         add_end_slash_if_missing(config[ 'job_id']) + \
+         add_end_slash_if_missing(os.environ['THING_NAME']) + \
+         MODEL
+
 torch.save(net, MODEL_PATH, _use_new_zipfile_serialization=False)
 uploaded = upload_to_aws(MODEL_PATH, config['output']['s3_bucket'],
-                         add_end_slash_if_missing(config['output']['s3_key_prefix']) + MODEL)
+                         S3_KEY)
 logging.info('finished: {"message": "Model saved"}')
