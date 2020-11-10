@@ -161,7 +161,10 @@ download_from_aws(config['input_model']['s3_bucket'], config['input_model']['s3_
 
 logging.info(f"LOCAL_MAIN_MODEL_PATH: {LOCAL_MAIN_MODEL_PATH}")
 
-net = torch.load(LOCAL_MAIN_MODEL_PATH)
+#net = torch.load(LOCAL_MAIN_MODEL_PATH)
+net = Net()
+checkpoint = torch.load(LOCAL_MAIN_MODEL_PATH)
+net.load_state_dict(checkpoint['model_state_dict'])
 net.to(device)
 criterion = nn.CrossEntropyLoss()
 
@@ -207,7 +210,13 @@ S3_KEY = add_end_slash_if_missing(config['output']['s3_key_prefix']) + \
          add_end_slash_if_missing(os.environ['THING_NAME']) + \
          MODEL
 
-torch.save(net, MODEL_PATH, _use_new_zipfile_serialization=False)
+#torch.save(net, MODEL_PATH, _use_new_zipfile_serialization=False)
+torch.save({
+            #'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            #'optimizer_state_dict': optimizer.state_dict(),
+            'loss': loss,
+            }, PATH, _use_new_zipfile_serialization=False)
 uploaded = upload_to_aws(MODEL_PATH, config['output']['s3_bucket'],
                          S3_KEY)
 logging.info('finished: {"message": "Model saved"}')
