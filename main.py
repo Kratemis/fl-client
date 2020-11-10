@@ -213,7 +213,7 @@ S3_KEY = add_end_slash_if_missing(config['output']['s3_key_prefix']) + \
 #torch.save(net, MODEL_PATH, _use_new_zipfile_serialization=False)
 torch.save({
             #'epoch': epoch,
-            'model_state_dict': model.state_dict(),
+            'model_state_dict': net.state_dict(),
             #'optimizer_state_dict': optimizer.state_dict(),
             'loss': loss,
             }, PATH, _use_new_zipfile_serialization=False)
